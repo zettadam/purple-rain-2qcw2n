@@ -1,60 +1,107 @@
-import { useEffect, useReducer } from "react";
-import getTodos from "./api/getTodos";
+import { useReducer } from "react";
+
+import useGetTodos from "./api/useGetTodos";
+import TaskItem from "./TaskItem";
 import classes from "./Todos.module.scss";
 
-const URL = "https://jsonplaceholder.typicode.com/todos";
+export const URL = "https://jsonplaceholder.typicode.com/todos";
 
-const initialState = {
-  tasks: [],
-  selectedTask: null,
+type State = {
+  expandedTasks: number[];
+  selectedTasks: number[];
 };
 
-function reducer(state, action) {
+type Action =
+  | { type: "TOGGLE_TASK_DETAILS"; payload: number }
+  | { type: "TOGGLE_TASK_SELECTION"; payload: number };
+
+const initialState: State = {
+  expandedTasks: [],
+  selectedTasks: [],
+};
+
+function reducer(state: State, action: Action) {
+  let expanded, selected;
+
   switch (action.type) {
-    case "SET_TODOS":
-      return { ...state, todos: action.payload };
-    case "SELECT_TODO":
-      return { ...state, selectedTodo: action.payload };
-    case "CLEAR_SELECTION":
-      return { ...state, selectedTodo: null };
-    default:
-      return state;
+    case "TOGGLE_TASK_DETAILS":
+      expanded = state.expandedTasks.find((t) => t === action.payload);
+      return {
+        ...state,
+        expandedTasks: expanded
+          ? state.expandedTasks.filter((t) => t !== action.payload)
+          : [...state.expandedTasks, action.payload],
+      };
+
+    case "TOGGLE_TASK_SELECTION":
+      selected = state.selectedTasks.find((t) => t === action.payload);
+      return {
+        ...state,
+        selectedTasks: selected
+          ? state.selectedTasks.filter((t) => t !== action.payload)
+          : [...state.selectedTasks, action.payload],
+      };
   }
 }
 
 const Todos = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { data, error, status } = getTodos(URL);
+  const { data, error, status } = useGetTodos(URL);
 
-  useEffect(() => {
-    if (data) {
-      console.log("data", data);
-      dispatch({ type: "SET_TODOS", payload: data });
+  const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const {
+      target: {
+        dataset: { id },
+      },
+    } = e;
+    if (id) {
+      dispatch({
+        type: "TOGGLE_TASK_SELECTION",
+        payload: parseInt(id, 10),
+      });
     }
-  });
+  };
 
-  if ("pending" === status) {
-    return <p>Loading tasks</p>;
-  }
-
-  if ("error" === status && error) {
-    return <p>Error fetching tasks. {error}</p>;
-  }
+  const handleDetailsToggle: React.MouseEventHandler<HTMLButtonElement> = (
+    e,
+  ) => {
+    const { value } = e.target as HTMLButtonElement;
+    if (value) {
+      dispatch({
+        type: "TOGGLE_TASK_DETAILS",
+        payload: parseInt(value, 10),
+      });
+    }
+  };
 
   return (
-    <div className="todos">
-      <ul>
-        {state.tasks?.map((todo) => (
-          <li
-            className={
-              todo.completed ? classes.taskCompleted : classes.taskPending
-            }
-            key={todo.id}
-          >
-            {todo.title}
-          </li>
-        ))}
-      </ul>
+    <div className={classes.todos}>
+      {"error" !== status && "success" !== status && (
+        <p data-testid="message">Loading tasks</p>
+      )}
+      {"error" === status && error && (
+        <p data-testid="message">Error: {error.message}</p>
+      )}
+      {data && Array.isArray(data) && data.length ? (
+        <ul data-testid="todolist">
+          {data.map((task) => {
+            const expanded = state.expandedTasks.indexOf(task.id) >= 0;
+            const selected = state.selectedTasks.indexOf(task.id) >= 0;
+            return (
+              <TaskItem
+                data={task}
+                expanded={expanded}
+                selected={selected}
+                onChange={handleChange}
+                onDetailsToggle={handleDetailsToggle}
+                key={task.id}
+              />
+            );
+          })}
+        </ul>
+      ) : (
+        <p>No tasks yet</p>
+      )}
     </div>
   );
 };

@@ -1,8 +1,75 @@
-.taskCompleted {
-    color: green;
-    text-decoration: line-through;
-}
+.todos {
+  margin: 1rem;
 
-.taskPending {
-    color: red;
+  ul {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    display: grid;
+    gap: 0.25rem 1rem;
+    grid-template-columns: repeat(11, 1fr) 4rem;
+    list-style-type: none;
+    margin: 0;
+    padding-block: 0.25rem;
+    padding-inline: 0.5rem;
+    width: 100%;
+
+    &:hover {
+      @media (prefers-color-scheme: light) {
+        background-color: lightgray;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        background-color: #202020;
+      }
+    }
+
+    label {
+      display: flex;
+      gap: 1rem;
+      grid-column: 1/11;
+      grid-row: 1/2;
+    }
+
+    input[type="checkbox"] {
+      accent-color: blue;
+      cursor: pointer;
+      height: 1.25rem;
+      width: 1.25rem;
+
+      &:focus {
+        outline: blue;
+      }
+    }
+
+    &:has(input:checked) {
+      @media (prefers-color-scheme: light) {
+        background: lightblue;
+      }
+      @media (prefers-color-scheme: dark) {
+        background: darkblue;
+      }
+
+      &:hover {
+        @media (prefers-color-scheme: light) {
+          background: #90c0f0;
+        }
+        @media (prefers-color-scheme: dark) {
+          background: #002060;
+        }
+      }
+    }
+
+    button {
+      cursor: pointer;
+      grid-column: 12/13;
+      grid-row: 1/2;
+      margin: 0;
+      padding: 0 0.5rem;
+    }
+  }
 }

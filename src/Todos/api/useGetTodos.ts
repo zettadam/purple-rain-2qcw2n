@@ -1,11 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-type Task = {
-  id: number;
-  userId: number;
-  title: string;
-  completed: boolean;
-};
+import type { Task } from "../types";
 
 async function fetchTodos(url: string): Promise<Task[]> {
   const res = await fetch(url);
@@ -15,12 +10,11 @@ async function fetchTodos(url: string): Promise<Task[]> {
   return res.json();
 }
 
-export default function getTodos(url: string) {
-  const { data, error, status, refetch } = useQuery({
+export default function useGetTodos(url: string) {
+  const { data, error, status } = useQuery({
     queryKey: ["todos"],
     queryFn: () => fetchTodos(url),
-    refetchInterval: 1000 * 120,
   });
 
-  return { data, error, status, refetch };
+  return { data, error, status };
 }
